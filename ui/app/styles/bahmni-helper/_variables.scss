@@ -188,9 +188,11 @@ Below listed fonts are used in the whole Bahmni application.
 /* settings */
 $max-page-width: 1300px;
 
-/*  _colors - bahmniTheme:  */
+/*  _colors - bahmniTheme:  */ 
 $bahmniPrimaryColor: #00463f;
-$bahmniSecondaryColor: #669999;
+// $bahmniPrimaryColor: #284251;
+// $bahmniSecondaryColor: #669999;
+$bahmniSecondaryColor: #284251;
 $bahmniTertiaryColor: #457FAC;
 
 $bahmniLinkColor: #2b95ff;
