@@ -13,24 +13,12 @@
         <div class="field-attribute">
           <label for="location"> {{'LOGIN_LABEL_LOCATION_KEY' | translate}} <span class="asterick">*</span> </label>
         </div>
-
-        <div class="field-value location-select">
-          <input list="locationOptions" id="location" name="location" ng-model="loginInfo.locationSearch" ng-change="search()" autocomplete="off" required />
-
-          <div class="location-list ui-autocomplete ui-front ui-menu ui-widget ui-widget-content ui-corner-all" ng-show="showLocationList">
-            <input class="location-option ui-menu-item" type="button" ng-model="loginInfo.currentLocation" ng-repeat="item in locations | orderBy:'display'" ng-value="item.display"
-                ng-click="selectLocation(item)"
-            >
-              {{ item.display | translate }}
-            </input>
-          </div>
-        </div>
-        <!-- <div class="field-value">
+        <div class="field-value">
                     <select id="location" ng-model="loginInfo.currentLocation"
                             ng-options="item as (item.display | translate) for item in locations | orderBy:'display'" required>
                         <option value="">{{'LOGIN_LABEL_SELECT_LOCATION_KEY' | translate}}</option>
                     </select>
-                </div> -->
+                </div>
       </div>
 
       <div class="form-footer">
