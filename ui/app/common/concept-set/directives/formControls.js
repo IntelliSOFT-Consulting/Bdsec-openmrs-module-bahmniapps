@@ -65,6 +65,145 @@ angular.module('bahmni.common.conceptSet')
                     }
                 });
 
+                function findItemWithText () {
+                    const items = document.querySelectorAll('.form-field-wrap');
+                    for (let item of items) {
+                        if (itemContainsText(item, "Eye to be Operated Co-ordinates")) {
+                            const eyeContainer = document.createElement('div');
+                            eyeContainer.id = 'eye-container';
+                            const eye = document.createElement('img');
+                            eye.id = 'eye';
+                            eye.src = 'https://static.vecteezy.com/system/resources/previews/026/773/363/non_2x/eye-with-ai-generated-free-png.png';
+                            const drawingArea = document.createElement('canvas');
+                            drawingArea.id = 'drawing-area';
+
+                            const clearBtn = document.createElement('button');
+                            clearBtn.id = 'clear-btn';
+                            clearBtn.textContent = 'Clear';
+                            clearBtn.className = 'drawing-btn';
+
+                            eyeContainer.appendChild(eye);
+                            eyeContainer.appendChild(drawingArea);
+                            eyeContainer.appendChild(clearBtn);
+                            item.appendChild(eyeContainer);
+
+                            setupDrawing();
+
+                            const obsControlField = item.querySelector('.obs-control-field');
+                            if (obsControlField) {
+                                obsControlField.style.display = 'none';
+                            }
+
+                            return item;
+                        }
+                    }
+                    return null;
+                }
+
+                function setupDrawing () {
+                    const canvas = document.getElementById('drawing-area');
+                    const ctx = canvas.getContext('2d');
+                    const clearBtn = document.getElementById('clear-btn');
+                    const loadBtn = document.getElementById('load-btn');
+                    let isDrawing = false;
+                    let coordinates = [];
+
+                    function resizeCanvas () {
+                        canvas.width = canvas.offsetWidth;
+                        canvas.height = canvas.offsetHeight;
+                    }
+
+                    function startDrawing (e) {
+                        isDrawing = true;
+                        draw(e);
+                    }
+
+                    function stopDrawing () {
+                        isDrawing = false;
+                        ctx.beginPath();
+                    }
+
+                    function draw (e) {
+                        if (!isDrawing) return;
+
+                        const rect = canvas.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+
+                        ctx.lineWidth = 2;
+                        ctx.lineCap = 'round';
+                        ctx.strokeStyle = 'red';
+
+                        ctx.lineTo(x, y);
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+
+                        coordinates.push({ x, y });
+                    }
+
+                    function clearDrawing () {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        coordinates = [];
+                    }
+
+                    function redrawFromCoordinates () {
+                        ctx.beginPath();
+                        ctx.strokeStyle = 'red';
+                        coordinates.forEach((point, index) => {
+                            if (index === 0) {
+                                ctx.moveTo(point.x, point.y);
+                            } else {
+                                ctx.lineTo(point.x, point.y);
+                            }
+                        });
+                        ctx.stroke();
+                    }
+
+                    window.addEventListener('resize', resizeCanvas);
+                    canvas.addEventListener('mousedown', startDrawing);
+                    canvas.addEventListener('mousemove', draw);
+                    canvas.addEventListener('mouseup', stopDrawing);
+                    canvas.addEventListener('mouseout', stopDrawing);
+                    clearBtn.addEventListener('click', clearDrawing);
+                    // loadBtn.addEventListener('click', loadDrawing);
+
+                    resizeCanvas();
+                }
+
+                function itemContainsText (element, text) {
+                    // Check if the current element contains the text
+                    if (element.textContent.includes(text)) {
+                        return true;
+                    }
+
+                    for (let child of element.children) {
+                        if (itemContainsText(child, text)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+
+                $scope.$watch('form.component', function (newValue) {
+                    if (newValue) {
+                        var formBuilderColumns = document.getElementsByClassName('form-builder-column');
+                        for (var i = 0; i < formBuilderColumns.length; i++) {
+                            // formBuilderColumns[i].style.background = 'red';
+                        }
+
+                        // get the test-table-label whose content is "." and add display: none to its parent
+                        var wrapperContents = document.getElementsByClassName('test-table-label');
+                        for (var i = 0; i < wrapperContents.length; i++) {
+                            if (wrapperContents[i].textContent === ".") {
+                                wrapperContents[i].parentElement.style.display = 'none';
+                            }
+                        }
+
+                        findItemWithText();
+                    }
+                });
+
                 $scope.$on('$destroy', function () {
                     if ($scope.$parent.consultation && $scope.$parent.consultation.observationForms) {
                         if ($scope.form.component) {
