@@ -716,6 +716,9 @@ body {
 
 .change-location {
   padding: 7px 10px;
+  height: 100%;
+  display: flex;
+  align-items: center;
   select,
   select:focus {
     height: fit-content;
