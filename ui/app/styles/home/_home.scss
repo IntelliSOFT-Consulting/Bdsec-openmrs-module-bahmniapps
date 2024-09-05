@@ -627,7 +627,7 @@ body {
   position: relative;
   header {
     .btn-user-info {
-      background: lighten($bahmniPrimaryColor, 10%);
+      background: $bdsecExtraDarkColor;
       padding: 17px 16px;
       border: none;
       border-radius: 0;
