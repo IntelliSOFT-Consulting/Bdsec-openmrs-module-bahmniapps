@@ -86,6 +86,7 @@ angular.module('bahmni.common.conceptSet')
                             eyeContainer.appendChild(drawingArea);
                             eyeContainer.appendChild(clearBtn);
                             item.appendChild(eyeContainer);
+                            item.classList.add('eye-container');
 
                             setupDrawing();
 
