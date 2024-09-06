@@ -26,11 +26,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script_stop: true
           script: |
+            source ~/.bashrc || source ~/.profile || source /etc/profile
             cd /opt/bdsec-repos/Bdsec-openmrs-module-bahmniapps/ui
             sudo git pull origin main
-            if ! yarn --version; then
-              sudo npm install -g yarn
-            fi
             yarn build --force
             cd /opt/bdsec-repos/bahmni-docker/bahmni-standard
             sudo docker-compose down bahmni-web
