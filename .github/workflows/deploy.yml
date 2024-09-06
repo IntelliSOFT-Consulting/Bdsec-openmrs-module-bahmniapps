@@ -1,0 +1,34 @@
+name: Deploy to VM
+
+on:
+  push:
+    branches:
+      - main 
+  workflow_dispatch:
+env:
+  SSH_PORT: 22
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Remote ssh to server and update docker-compose
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ env.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true
+          script: |
+            cd /opt/bdsec-repos/Bdsec-openmrs-module-bahmniapps/ui
+            sudo git pull origin main
+            yarn build --force
+            cd /opt/bdsec-repos/bahmni-docker/bahmni-standard
+            sudo docker-compose down bahmni-web
+            sudo docker-compose up -d --no-deps --build bahmni-web
