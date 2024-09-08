@@ -27,8 +27,10 @@ jobs:
           script_stop: true
           script: |
             source ~/.bashrc || source ~/.profile || source /etc/profile
-            cd /opt/bdsec-repos/Bdsec-openmrs-module-bahmniapps/ui
+            cd /opt/bdsec-repos/Bdsec-openmrs-module-bahmniapps
             sudo git pull origin main
+            cd ui
+            pwd
             yarn build --force
             cd /opt/bdsec-repos/bahmni-docker/bahmni-standard
             sudo docker-compose down bahmni-web
