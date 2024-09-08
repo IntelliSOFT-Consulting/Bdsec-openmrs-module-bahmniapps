@@ -30,7 +30,7 @@ jobs:
             cd /opt/bdsec-repos/Bdsec-openmrs-module-bahmniapps
             sudo git pull origin main
             cd ui
-            pwd
+            source yarn
             yarn build --force
             cd /opt/bdsec-repos/bahmni-docker/bahmni-standard
             sudo docker-compose down bahmni-web
