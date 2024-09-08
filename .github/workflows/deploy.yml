@@ -26,12 +26,16 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script_stop: true
           script: |
-            source ~/.bashrc || source ~/.profile || source /etc/profile
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+            nvm use 10.24.1
+            export PATH="/home/patrick/.nvm/versions/node/v10.24.1/bin:$PATH"
+            
             cd /opt/bdsec-repos/Bdsec-openmrs-module-bahmniapps
             sudo git pull origin main
             cd ui
-            source yarn
             yarn build --force
+            
             cd /opt/bdsec-repos/bahmni-docker/bahmni-standard
             sudo docker-compose down bahmni-web
             sudo docker-compose up -d --no-deps --build bahmni-web
