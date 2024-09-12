@@ -73,7 +73,7 @@ angular.module('bahmni.common.conceptSet')
                             eyeContainer.id = 'eye-container';
                             const eye = document.createElement('img');
                             eye.id = 'eye';
-                            eye.src = 'https://static.vecteezy.com/system/resources/previews/026/773/363/non_2x/eye-with-ai-generated-free-png.png';
+                            eye.src = '/bahmni/images/eye.png';
                             const drawingArea = document.createElement('canvas');
                             drawingArea.id = 'drawing-area';
 
