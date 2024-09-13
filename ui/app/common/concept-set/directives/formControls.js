@@ -157,7 +157,8 @@ angular.module("bahmni.common.conceptSet").directive("formControls", [
             const findAndSetupDrawings = () => {
                 const items = document.querySelectorAll(".form-field-wrap");
                 const drawingData = [
-          { text: "Eye to be Operated Co-ordinates", imageSrc: "/bahmni/images/eye.png" },
+          { text: "Slit Lamp Exam Cornea Drawing, Left Eye", imageSrc: "/bahmni/images/eye.png" },
+          { text: "Slit Lamp Exam Cornea Drawing, Right Eye", imageSrc: "/bahmni/images/eye.png" },
           { text: "Fundus Exam Drawing, Left Eye", imageSrc: "/bahmni/images/fundus-left.png" },
           { text: "Fundus Exam Drawing, Right Eye", imageSrc: "/bahmni/images/fundus-right.png" }
                 ];
