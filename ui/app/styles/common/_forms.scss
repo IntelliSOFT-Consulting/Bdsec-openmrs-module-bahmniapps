@@ -12,24 +12,22 @@
     }
   }
 
-  .eye-container {
+  .eye-container-class {
     padding: 5px;
     border: 1px solid #c6c5c5;
     border-radius: 5px;
     width: fit-content !important;
+    position: relative;
   }
 
-  #eye-container {
+  .eye-class {
     position: relative;
     width: 300px;
-    height: 150px;
+    height: 300px;
     margin-bottom: 40px;
   }
-  #eye {
-    width: 100%;
-    height: 100%;
-  }
-  #drawing-area {
+
+  .drawing-area-class {
     position: absolute;
     top: 0;
     left: 0;
@@ -37,8 +35,11 @@
     height: 100%;
   }
 
-  .drawing-btn {
+  .clear-btn-class {
     margin-right: 5px;
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
   }
 }
 

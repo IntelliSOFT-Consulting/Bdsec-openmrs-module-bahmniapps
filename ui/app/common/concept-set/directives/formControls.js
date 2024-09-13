@@ -1,232 +1,238 @@
-'use strict';
+"use strict";
 
-angular.module('bahmni.common.conceptSet')
-    .directive('formControls', ['formService', 'spinner', '$timeout', '$translate',
-        function (formService, spinner, $timeout, $translate) {
-            var loadedFormDetails = {};
-            var loadedFormTranslations = {};
-            var unMountReactContainer = function (formUuid) {
-                var reactContainerElement = angular.element(document.getElementById(formUuid));
-                reactContainerElement.on('$destroy', function () {
-                    unMountForm(document.getElementById(formUuid));
-                });
-            };
+angular.module("bahmni.common.conceptSet").directive("formControls", [
+    "formService",
+    "spinner",
+    "$timeout",
+    "$translate",
+    function (formService, spinner, $timeout, $translate) {
+        const loadedFormDetails = {};
+        const loadedFormTranslations = {};
 
-            var controller = function ($scope) {
-                var formUuid = $scope.form.formUuid;
-                var formVersion = $scope.form.formVersion;
-                var formName = $scope.form.formName;
-                var formObservations = $scope.form.observations;
-                var collapse = $scope.form.collapseInnerSections && $scope.form.collapseInnerSections.value;
-                var validateForm = $scope.validateForm || false;
-                var locale = $translate.use();
+        const unMountReactContainer = (formUuid) => {
+            const reactContainerElement = angular.element(document.getElementById(formUuid));
+            reactContainerElement.on("$destroy", () => unMountForm(document.getElementById(formUuid)));
+        };
 
-                if (!loadedFormDetails[formUuid]) {
-                    spinner.forPromise(formService.getFormDetail(formUuid, { v: "custom:(resources:(value))" })
-                        .then(function (response) {
-                            var formDetailsAsString = _.get(response, 'data.resources[0].value');
-                            if (formDetailsAsString) {
-                                var formDetails = JSON.parse(formDetailsAsString);
-                                formDetails.version = formVersion;
-                                loadedFormDetails[formUuid] = formDetails;
-                                var formParams = { formName: formName, formVersion: formVersion, locale: locale, formUuid: formUuid };
-                                $scope.form.events = formDetails.events;
-                                spinner.forPromise(formService.getFormTranslations(formDetails.translationsUrl, formParams)
-                                    .then(function (response) {
-                                        var formTranslations = !_.isEmpty(response.data) ? response.data[0] : {};
-                                        loadedFormTranslations[formUuid] = formTranslations;
-                                        $scope.form.component = renderWithControls(formDetails, formObservations,
-                                            formUuid, collapse, $scope.patient, validateForm, locale, formTranslations);
-                                    }, function () {
-                                        var formTranslations = {};
-                                        loadedFormTranslations[formUuid] = formTranslations;
-                                        $scope.form.component = renderWithControls(formDetails, formObservations,
-                                            formUuid, collapse, $scope.patient, validateForm, locale, formTranslations);
-                                    })
-                                );
-                            }
-                            unMountReactContainer($scope.form.formUuid);
-                        })
+        const controller = ($scope) => {
+            const { formUuid, formVersion, formName, observations: formObservations, collapseInnerSections: { value: collapse } = {} } = $scope.form;
+
+            const locale = $translate.use();
+            const validateForm = $scope.validateForm || false;
+
+            const loadFormDetails = () => {
+                return spinner
+          .forPromise(
+            formService.getFormDetail(formUuid, { v: "custom:(resources:(value))" }).then((response) => {
+                const formDetailsAsString = _.get(response, "data.resources[0].value");
+                if (formDetailsAsString) {
+                    const formDetails = JSON.parse(formDetailsAsString);
+                    formDetails.version = formVersion;
+                    loadedFormDetails[formUuid] = formDetails;
+
+                    const formParams = { formName, formVersion, locale, formUuid };
+                    $scope.form.events = formDetails.events;
+
+                    return spinner
+                  .forPromise(
+                    formService
+                      .getFormTranslations(formDetails.translationsUrl, formParams)
+                      .then((res) => res.data[0] || {})
+                      .catch(() => ({}))
+                  )
+                  .then((formTranslations) => {
+                      loadedFormTranslations[formUuid] = formTranslations;
+                      $scope.form.component = renderWithControls(
+                      formDetails,
+                      formObservations,
+                      formUuid,
+                      collapse,
+                      $scope.patient,
+                      validateForm,
+                      locale,
+                      formTranslations
                     );
+                  });
+                }
+            })
+          )
+          .finally(() => unMountReactContainer(formUuid));
+            };
+
+            const setupFormComponent = () => {
+                const formDetails = loadedFormDetails[formUuid];
+                const formTranslations = loadedFormTranslations[formUuid];
+                $scope.form.events = formDetails.events;
+                $scope.form.component = renderWithControls(
+          formDetails,
+          formObservations,
+          formUuid,
+          collapse,
+          $scope.patient,
+          validateForm,
+          locale,
+          formTranslations
+        );
+                unMountReactContainer(formUuid);
+            };
+
+            const initializeForm = () => {
+                if (!loadedFormDetails[formUuid]) {
+                    loadFormDetails();
                 } else {
-                    $timeout(function () {
-                        $scope.form.events = loadedFormDetails[formUuid].events;
-                        $scope.form.component = renderWithControls(loadedFormDetails[formUuid], formObservations,
-                            formUuid, collapse, $scope.patient, validateForm, locale, loadedFormTranslations[formUuid]);
-                        unMountReactContainer($scope.form.formUuid);
-                    }, 0, false);
+                    $timeout(setupFormComponent, 0, false);
                 }
+            };
 
-                $scope.$watch('form.collapseInnerSections', function () {
-                    var collapse = $scope.form.collapseInnerSections && $scope.form.collapseInnerSections.value;
-                    if (loadedFormDetails[formUuid]) {
-                        $scope.form.component = renderWithControls(loadedFormDetails[formUuid], formObservations,
-                            formUuid, collapse, $scope.patient, validateForm, locale, loadedFormTranslations[formUuid]);
+            const handleCollapseChange = () => {
+                if (loadedFormDetails[formUuid]) {
+                    setupFormComponent();
+                }
+            };
+
+            const setupDrawingTools = (canvasId, clearBtnId) => {
+                const canvas = document.getElementById(canvasId);
+                const ctx = canvas.getContext("2d");
+                let isDrawing = false;
+                let coordinates = [];
+
+                const resizeCanvas = () => {
+                    canvas.width = canvas.offsetWidth;
+                    canvas.height = canvas.offsetHeight;
+                };
+
+                const startDrawing = (e) => {
+                    isDrawing = true;
+                    draw(e);
+                };
+
+                const stopDrawing = () => {
+                    isDrawing = false;
+                    ctx.beginPath();
+                    updateObsControlField();
+                };
+
+                const draw = (e) => {
+                    if (!isDrawing) return;
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+
+                    ctx.lineWidth = 2;
+                    ctx.lineCap = "round";
+                    ctx.strokeStyle = "red";
+
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+
+                    coordinates.push({ x, y });
+                };
+
+                const clearDrawing = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    coordinates = [];
+                    updateObsControlField();
+                };
+
+                const updateObsControlField = () => {
+                    if (obsControlField) {
+                        const textArea = obsControlField.querySelector("textarea");
+                        textArea.value = JSON.stringify(coordinates);
                     }
-                });
+                };
 
-                function findItemWithText () {
-                    const items = document.querySelectorAll('.form-field-wrap');
-                    for (let item of items) {
-                        if (itemContainsText(item, "Eye to be Operated Co-ordinates")) {
-                            const eyeContainer = document.createElement('div');
-                            eyeContainer.id = 'eye-container';
-                            const eye = document.createElement('img');
-                            eye.id = 'eye';
-                            eye.src = '/bahmni/images/eye.png';
-                            const drawingArea = document.createElement('canvas');
-                            drawingArea.id = 'drawing-area';
+                canvas.addEventListener("mousedown", startDrawing);
+                canvas.addEventListener("mousemove", draw);
+                canvas.addEventListener("mouseup", stopDrawing);
+                canvas.addEventListener("mouseout", stopDrawing);
 
-                            const clearBtn = document.createElement('button');
-                            clearBtn.id = 'clear-btn';
-                            clearBtn.textContent = 'Clear';
-                            clearBtn.className = 'drawing-btn';
+                document.getElementById(clearBtnId).addEventListener("click", clearDrawing);
 
-                            eyeContainer.appendChild(eye);
-                            eyeContainer.appendChild(drawingArea);
-                            eyeContainer.appendChild(clearBtn);
+                resizeCanvas();
+                window.addEventListener("resize", resizeCanvas);
+            };
+
+            const findAndSetupDrawings = () => {
+                const items = document.querySelectorAll(".form-field-wrap");
+                const drawingData = [
+          { text: "Eye to be Operated Co-ordinates", imageSrc: "/bahmni/images/eye.png" },
+          { text: "Fundus Exam Drawing, Left Eye", imageSrc: "/bahmni/images/fundus-left.png" },
+          { text: "Fundus Exam Drawing, Right Eye", imageSrc: "/bahmni/images/fundus-right.png" }
+                ];
+
+                items.forEach((item, index) => {
+                    drawingData.forEach(({ text, imageSrc }, dataIndex) => {
+                        if (itemContainsText(item, text)) {
+                            const canvasId = `drawing-area-${index}-${dataIndex}`;
+                            const clearBtnId = `clear-btn-${index}-${dataIndex}`;
+                            const eyeContainer = createDrawingContainer(imageSrc, canvasId, clearBtnId);
                             item.appendChild(eyeContainer);
-                            item.classList.add('eye-container');
+                            setupDrawingTools(canvasId, clearBtnId);
 
-                            setupDrawing();
-
-                            const obsControlField = item.querySelector('.obs-control-field');
-                            if (obsControlField) {
-                                obsControlField.style.display = 'none';
-                            }
-
-                            return item;
+                            const obsControlField = item.querySelector(".obs-control-field");
+                            if (obsControlField) obsControlField.style.display = "none";
+                            item.classList.add("eye-container-class");
                         }
-                    }
-                    return null;
-                }
-
-                function setupDrawing () {
-                    const canvas = document.getElementById('drawing-area');
-                    const ctx = canvas.getContext('2d');
-                    const clearBtn = document.getElementById('clear-btn');
-                    const loadBtn = document.getElementById('load-btn');
-                    let isDrawing = false;
-                    let coordinates = [];
-
-                    function resizeCanvas () {
-                        canvas.width = canvas.offsetWidth;
-                        canvas.height = canvas.offsetHeight;
-                    }
-
-                    function startDrawing (e) {
-                        isDrawing = true;
-                        draw(e);
-                    }
-
-                    function stopDrawing () {
-                        isDrawing = false;
-                        ctx.beginPath();
-                    }
-
-                    function draw (e) {
-                        if (!isDrawing) return;
-
-                        const rect = canvas.getBoundingClientRect();
-                        const x = e.clientX - rect.left;
-                        const y = e.clientY - rect.top;
-
-                        ctx.lineWidth = 2;
-                        ctx.lineCap = 'round';
-                        ctx.strokeStyle = 'red';
-
-                        ctx.lineTo(x, y);
-                        ctx.stroke();
-                        ctx.beginPath();
-                        ctx.moveTo(x, y);
-
-                        coordinates.push({ x, y });
-                    }
-
-                    function clearDrawing () {
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        coordinates = [];
-                    }
-
-                    function redrawFromCoordinates () {
-                        ctx.beginPath();
-                        ctx.strokeStyle = 'red';
-                        coordinates.forEach((point, index) => {
-                            if (index === 0) {
-                                ctx.moveTo(point.x, point.y);
-                            } else {
-                                ctx.lineTo(point.x, point.y);
-                            }
-                        });
-                        ctx.stroke();
-                    }
-
-                    window.addEventListener('resize', resizeCanvas);
-                    canvas.addEventListener('mousedown', startDrawing);
-                    canvas.addEventListener('mousemove', draw);
-                    canvas.addEventListener('mouseup', stopDrawing);
-                    canvas.addEventListener('mouseout', stopDrawing);
-                    clearBtn.addEventListener('click', clearDrawing);
-                    // loadBtn.addEventListener('click', loadDrawing);
-
-                    resizeCanvas();
-                }
-
-                function itemContainsText (element, text) {
-                    // Check if the current element contains the text
-                    if (element.textContent.includes(text)) {
-                        return true;
-                    }
-
-                    for (let child of element.children) {
-                        if (itemContainsText(child, text)) {
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-
-                $scope.$watch('form.component', function (newValue) {
-                    if (newValue) {
-                        var formBuilderColumns = document.getElementsByClassName('form-builder-column');
-                        for (var i = 0; i < formBuilderColumns.length; i++) {
-                            // formBuilderColumns[i].style.background = 'red';
-                        }
-
-                        // get the test-table-label whose content is "." and add display: none to its parent
-                        var wrapperContents = document.getElementsByClassName('test-table-label');
-                        for (var i = 0; i < wrapperContents.length; i++) {
-                            if (wrapperContents[i].textContent === ".") {
-                                wrapperContents[i].parentElement.style.display = 'none';
-                            }
-                        }
-
-                        findItemWithText();
-                    }
-                });
-
-                $scope.$on('$destroy', function () {
-                    if ($scope.$parent.consultation && $scope.$parent.consultation.observationForms) {
-                        if ($scope.form.component) {
-                            var formObservations = $scope.form.component.getValue();
-                            $scope.form.observations = formObservations.observations;
-
-                            var hasError = formObservations.errors;
-                            if (!_.isEmpty(hasError)) {
-                                $scope.form.isValid = false;
-                            }
-                        }
-                    }
+                    });
                 });
             };
 
-            return {
-                restrict: 'E',
-                scope: {
-                    form: "=",
-                    patient: "=",
-                    validateForm: "="
-                },
-                controller: controller
+            const createDrawingContainer = (imageSrc, canvasId, clearBtnId) => {
+                const eyeContainer = document.createElement("div");
+                eyeContainer.className = "eye-container-class";
+
+                const eye = document.createElement("img");
+                eye.className = "eye-class";
+                eye.src = imageSrc;
+
+                const drawingArea = document.createElement("canvas");
+                drawingArea.id = canvasId;
+                drawingArea.className = "drawing-area-class";
+
+                const clearBtn = document.createElement("button");
+                clearBtn.id = clearBtnId;
+                clearBtn.className = "clear-btn-class";
+                clearBtn.textContent = "Clear";
+
+                eyeContainer.append(eye, drawingArea, clearBtn);
+                return eyeContainer;
             };
-        }]);
+
+            const itemContainsText = (element, text) => {
+                if (element.textContent.includes(text)) return true;
+                return [...element.children].some((child) => itemContainsText(child, text));
+            };
+
+            $scope.$watch("form.collapseInnerSections", handleCollapseChange);
+
+            $scope.$watch("form.component", (newValue) => {
+                if (newValue) {
+                    findAndSetupDrawings();
+                }
+            });
+
+            $scope.$on("$destroy", () => {
+                const { consultation } = $scope.$parent;
+                if (consultation && consultation.observationForms && $scope.form.component) {
+                    const formObservations = $scope.form.component.getValue();
+                    $scope.form.observations = formObservations.observations;
+                    $scope.form.isValid = _.isEmpty(formObservations.errors);
+                }
+            });
+
+            initializeForm();
+        };
+
+        return {
+            restrict: "E",
+            scope: {
+                form: "=",
+                patient: "=",
+                validateForm: "="
+            },
+            controller: controller
+        };
+    }
+]);
