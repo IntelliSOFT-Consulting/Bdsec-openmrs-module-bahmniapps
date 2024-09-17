@@ -7,7 +7,7 @@ Bahmni.ConceptSet.Observation = function (observation, savedObs, conceptUIConfig
     this.conceptUIConfig = conceptUIConfig[this.concept.name] || [];
     this.uniqueId = _.uniqueId('observation_');
     this.erroneousValue = null;
-
+    console.log("observation", observation);
     if (savedObs) {
         this.uuid = savedObs.uuid;
         this.value = savedObs.value;
@@ -50,7 +50,7 @@ Bahmni.ConceptSet.Observation = function (observation, savedObs, conceptUIConfig
             self.onValueChanged();
         }
     });
-
+    console.log("this.value", this.value);
     var cloneNonTabularObs = function (oldObs) {
         var newGroupMembers = [];
         oldObs.groupMembers.forEach(function (member) {

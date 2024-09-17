@@ -16,12 +16,14 @@
             return obs.value.shortName || obs.value.name || obs.value;
         },
         "Object": function (obs) {
+            console.log("obs Object", obs);
             return nameFor.Coded(obs);
         },
         "MultiSelect": function (obs) {
             return obs.getValues().join(", ");
         },
         "Default": function (obs) {
+            console.log("obs", obs);
             return obs.value;
         }
     };
