@@ -41,7 +41,6 @@ angular.module('bahmni.common.conceptSet')
                     field.className = 'diagram-field';
                     var angleRad = pos.angle * (Math.PI / 180);
 
-                    // Apply adjustment ratio and vertical shift
                     var fieldX = centerX + (radius + 20) * Math.cos(angleRad) * adjustmentRatio;
                     var fieldY = centerY + (radius + 20) * Math.sin(angleRad) * adjustmentRatio + verticalShift;
 
@@ -68,27 +67,88 @@ angular.module('bahmni.common.conceptSet')
                 return parent;
             }
 
+            function createGonioscopyDiagram (eyeSide, inputs) {
+                var diagram = document.createElement('div');
+                diagram.className = 'gonioscopy-diagram ' + eyeSide + '-eye';
+
+                var centerX = 150, centerY = 150, radius = 100;
+
+                var positions = [
+                    { angle: 0, label: "Right", x: 250, y: 120 },
+                    { angle: 90, label: "Bottom", x: 160, y: 220 },
+                    { angle: 180, label: "Left", x: 50, y: 120 },
+                    { angle: 270, label: "Top", x: 160, y: 50 }
+                ];
+
+                // Create X-shaped cross
+                var cross = document.createElement('div');
+                cross.className = 'gonioscopy-cross';
+                diagram.appendChild(cross);
+
+                // Create center circle
+                var circle = document.createElement('div');
+                circle.className = 'gonioscopy-center';
+                diagram.appendChild(circle);
+
+                positions.forEach(function (pos) {
+                    var field = inputs.find(input => {
+                        var label = input.querySelector('label');
+                        return label.textContent.includes(pos.label);
+                    });
+                    if (field) {
+                        field.className = 'gonioscopy-field';
+                        field.style.left = pos.x + 'px';
+                        field.style.top = pos.y + 'px';
+                        field.setAttribute('data-position', eyeSide + ' Eye, ' + pos.label);
+                        diagram.appendChild(field);
+                    }
+                });
+
+                return diagram;
+            }
+
+            function renderGonioscopyTest (parent, rightEyeInputs, leftEyeInputs) {
+                var container = document.createElement('div');
+                container.className = 'gonioscopy-test-container';
+
+                var leftEyeDiagram = createGonioscopyDiagram('Left', leftEyeInputs);
+                var rightEyeDiagram = createGonioscopyDiagram('Right', rightEyeInputs);
+
+                container.appendChild(leftEyeDiagram);
+                container.appendChild(rightEyeDiagram);
+
+                parent.appendChild(container);
+                return parent;
+            }
+
             function findItemWithText () {
-                var targetText = "MOTILITY TEST";
+                var targetTexts = ["MOTILITY TEST", "GONIOSCOPY EVALUATION"];
                 const headers = document.querySelectorAll('.table-header');
 
-                const headerWithText = Array.from(headers).find(header => header.textContent.includes(targetText));
-                if (headerWithText) {
-                    const parentDiv = headerWithText.parentElement;
-                    parentDiv.style.position = 'relative';
+                targetTexts.forEach(targetText => {
+                    const headerWithText = Array.from(headers).find(header => header.textContent.includes(targetText));
+                    if (headerWithText) {
+                        const parentDiv = headerWithText.parentElement;
+                        parentDiv.style.position = 'relative';
 
-                    const titles = parentDiv.querySelectorAll('.control-wrapper-content');
-                    titles.forEach(title => {
-                        title.style.display = 'flex';
-                        title.style.justifyContent = 'center';
-                    });
+                        const titles = parentDiv.querySelectorAll('.control-wrapper-content');
+                        titles.forEach(title => {
+                            title.style.display = 'flex';
+                            title.style.justifyContent = 'center';
+                        });
 
-                    const inputs = parentDiv.querySelectorAll('.form-builder-column-wrapper');
+                        const inputs = parentDiv.querySelectorAll('.form-builder-column-wrapper');
 
-                    const rightEyeInputs = Array.from(inputs).filter((input, index) => index % 2 !== 0);
-                    const leftEyeInputs = Array.from(inputs).filter((input, index) => index % 2 === 0);
-                    renderMotilityTest(parentDiv, rightEyeInputs, leftEyeInputs);
-                }
+                        const rightEyeInputs = Array.from(inputs).filter((input, index) => index % 2 !== 0);
+                        const leftEyeInputs = Array.from(inputs).filter((input, index) => index % 2 === 0);
+
+                        if (targetText === "MOTILITY TEST") {
+                            renderMotilityTest(parentDiv, rightEyeInputs, leftEyeInputs);
+                        } else if (targetText === "GONIOSCOPY EVALUATION") {
+                            renderGonioscopyTest(parentDiv, rightEyeInputs, leftEyeInputs);
+                        }
+                    }
+                });
             }
 
             var unMountReactContainer = function (formUuid) {
