@@ -44,12 +44,14 @@ angular.module('bahmni.common.attributeTypes', []).directive('attributeTypes', [
                         return answer.description === $scope.defaultDescription;
                     });
 
-                    if (defaultOption && !$scope.targetModel[$scope?.attribute?.name]?.conceptUuid) {
-                        $scope.targetModel[$scope?.attribute?.name] = { conceptUuid: defaultOption.conceptId, value: defaultOption.fullySpecifiedName };
+                    if (defaultOption && !$scope.targetModel[$scope && $scope.attribute && $scope.attribute.name] && !$scope.targetModel[$scope.attribute.name].conceptUuid) {
+                        $scope.targetModel[$scope.attribute.name] = {
+                            conceptUuid: defaultOption.conceptId,
+                            value: defaultOption.fullySpecifiedName
+                        };
                     }
                 }
             };
-
         }
     };
 }]);
