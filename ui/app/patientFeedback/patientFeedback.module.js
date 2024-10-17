@@ -1,0 +1,1 @@
+angular.module("bahmni.patientFeedback", ["ui.router"]);
